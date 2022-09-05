@@ -1,13 +1,15 @@
 import { FormEvent, useState } from "react";
+import { v4 as uuidv4 } from 'uuid';
+
+import Button from "./components/Button";
+import Header from "./components/Header";
+import HeaderTasksContainer from "./components/HeaderTasksContainer";
+import TasksList from "./components/TasksList";
 
 import styles from "./App.module.css";
-import Header from "./components/Header";
 
-import { PlusCircle, Trash } from "phosphor-react";
-import { TodoEmpty } from "./components/TodoEmpty";
-
-interface Todo {
-  id: number;
+export interface Todo {
+  id: string;
   title: string;
   isComplete?: boolean;
 }
@@ -16,20 +18,23 @@ function App() {
   const [todoText, setTodoText] = useState("");
   const [todos, setTodos] = useState<Todo[]>([]);
 
-
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    let newTodo = {
-      id: Math.floor(Math.random() * 100),
-      title: todoText,
-      isComplete: false,
-    };
 
-    setTodos([newTodo, ...todos]);
-    setTodoText("");
+    if (todoText.trim() !== "") {
+      let newTodo = {
+        id: uuidv4(),
+        title: todoText,
+        isComplete: false,
+      };
+  
+      setTodos([newTodo, ...todos]);
+      setTodoText("");
+    }
+    return;
   }
 
-  function isCompletedTask(id: number) {
+  function isCompletedTask(id: string) {
     let newTask = todos.map((task) => {
       if (task.id == id) {
         return {
@@ -42,7 +47,7 @@ function App() {
     setTodos(newTask);
   }
 
-  function handleDeleteTodo(id: number) {
+  function handleDeleteTodo(id: string) {
     let filteredTodos = todos.filter((todo) => todo.id !== id);
 
     setTodos(filteredTodos);
@@ -59,48 +64,17 @@ function App() {
           onChange={(e) => setTodoText(e.target.value)}
           placeholder="Digite uma nova tarefa"
         />
-        <button>
-          Criar
-          <PlusCircle size={20} />
-        </button>
+        <Button />
       </form>
+      
       <div className={styles.tasksContainer}>
-        <header>
-          <div className={styles.created}>
-            <strong>Tarefas criadas</strong>
-            <span>{todos.length}</span>
-          </div>
-          <div className={styles.done}>
-            <strong>Concluídas</strong>
-            <span>
-              <>{todos.filter((task) => task.isComplete).length}</>
-              de
-              {todos.length}
-            </span>
-          </div>
-        </header>
-
+        <HeaderTasksContainer todos={todos}/>
         <div>
-          <ul className={styles.tasksList}>
-            {todos.length == 0 ? (
-              <TodoEmpty />
-            ) : (
-              todos.map((todo: Todo) => {
-                return (
-                  <li key={todo.id} className={styles.task}>
-                    <input
-                      className={styles.check}
-                      type="checkbox"
-                      onClick={() => isCompletedTask(todo.id)}
-                      checked={todo.isComplete}
-                    />
-                    <p>{todo.title}</p>
-                    <Trash onClick={() => handleDeleteTodo(todo.id)} />
-                  </li>
-                );
-              })
-            )}
-          </ul>
+          <TasksList
+            todos={todos}
+            onDeleteTodo={handleDeleteTodo}
+            onIsCompletedTask={isCompletedTask}
+          />
         </div>
       </div>
     </div>
